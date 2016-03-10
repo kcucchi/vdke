@@ -1,0 +1,8 @@
+Package: vkde
+Title: What the Package Does (one line, title case)
+Version: 0.0.0.9000
+Authors@R: person("Karina", "Cucchi", email = "karina.cucchi@berkeley.edu", role = c("aut", "cre"))
+Description: This will be the description.
+Depends: R (>= 3.2.1)
+License: What license is it under?
+LazyData: true
