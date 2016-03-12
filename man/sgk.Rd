@@ -9,7 +9,8 @@ sgk(t, e, h)
 \arguments{
 \item{t}{a number corresponding to the training data point.}
 
-\item{e}{a number or numeric vector corresponding to the evaluation data point.}
+\item{e}{a number or numeric vector corresponding to the evaluation data
+point.}
 
 \item{h}{the width of the kernel.}
 }
@@ -23,10 +24,11 @@ The evaluation at location \code{e} of the Gaussian kernel centered
 \details{
 These are the details of the function.
 }
-\section{Warning These can be some warnings.}{
-
-}
 \examples{
-sgk(0,seq(from=-5,to=5,by=0.1),1)
+singleKde <- sgk(0,seq(from=-5,to=5,by=0.1),1)
+plot(singleKde$kpdf$x,singleKde$kpdf$y,
+   type='l',
+   xlab = 'x',ylab='kernel density estimate')
+   axis(1,singleKde$t,labels = NA,lwd.ticks = 2,col.ticks = 'red',tck=0.1)
 }
 

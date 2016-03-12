@@ -11,9 +11,8 @@ kde_h(tdat, edat, bwtype, h)
 
 \item{edat}{a vector containing the evaluation data points.}
 
-\item{bwtype}{a string corresponding to the method for calculating
-bandwidths. Either \code{'fixed'}, \code{'balloon'} or
-\code{'sampleSmoothing'}.}
+\item{bwtype}{a string corresponding to the method for calculating bandwidths.
+Either \code{'fixed'}, \code{'balloon'} or \code{'sampleSmoothing'}.}
 
 \item{h}{the bandwdth(s) of the kernels. It should be a scalar when
 \code{'bwtype=fixed'}, a vector of length \code{length(edat)} for
@@ -23,8 +22,8 @@ in this package.}
 }
 \value{
 The density at locations \code{edat} based on the training dataset
-  \code{tdat} following the method specified by \code{bwtype}. The bandwidths
-  \code{h} can be calculated from other functions in this package.
+ \code{tdat} following the method specified by \code{bwtype}. The bandwidths
+ \code{h} can be calculated from other functions in this package.
 }
 \description{
 This is the description of the function \code{kde_h}.
@@ -32,10 +31,16 @@ This is the description of the function \code{kde_h}.
 \details{
 These are the details of the function.
 }
-\section{Warning These can be some warnings.}{
-
-}
 \examples{
-
+evalVect <- seq(from=-5,to=5,by=0.1)
+trainingVect <- runif(5,min = -1,max = 2)
+kernelVect <- kde_h(tdat=trainingVect,edat=evalVect,'fixed',1)
+plot(evalVect,kernelVect$kde,
+     type='l',
+     xlab = 'x',ylab='kernel density estimate')
+axis(1,trainingVect,labels = NA,lwd.ticks = 2,col.ticks = 'red',tck=0.1)
+for(i in 1:length(trainingVect)){
+  lines(evalVect,kernelVect$individualKernels[i,],lty=2)
+}
 }
 
