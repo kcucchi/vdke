@@ -7,10 +7,10 @@
 sgk(t, e, h)
 }
 \arguments{
-\item{t}{a number corresponding to the training data point.}
+\item{t}{a number or vector corresponding to the training data point.}
 
-\item{e}{a number or numeric vector corresponding to the evaluation data
-point.}
+\item{e}{a vector, or array corresponding to the evaluation data
+points.}
 
 \item{h}{the width of the kernel.}
 }

@@ -7,23 +7,69 @@
 #'
 #'These are the details of the function.
 #'
-#'@param t a number corresponding to the training data point.
-#'@param e a number or numeric vector corresponding to the evaluation data
-#'  point.
+#'@param t a number or vector corresponding to the training data point.
+#'@param e a vector, or array corresponding to the evaluation data points.
 #'@param h the width of the kernel.
 #'@return The evaluation at location \code{e} of the Gaussian kernel centered at
 #'  \code{t} and with width \code{h}.
-#' @examples
-#' singleKde <- sgk(0,seq(from=-5,to=5,by=0.1),1)
-#' plot(singleKde$kpdf$x,singleKde$kpdf$y,
+#'@examples
+#'singleKde1D <- sgk(0,seq(from=-5,to=5,by=0.1),1)
+#'plot(singleKde1D$x_pdf,singleKde1D$y_pdf,
 #'    type='l',
 #'    xlab = 'x',ylab='kernel density estimate')
 #'    axis(1,singleKde$t,labels = NA,lwd.ticks = 2,col.ticks = 'red',tck=0.1)
+#'singleKde2D <- sgk(t=c(0,1),e=array(1:10,dim=c(2,5)),h=1)
 #'@export
 sgk <- function(t,e,h){
-  normVal <- 1 / (h * sqrt(2 * pi))
-  expVal <- exp( - (e - t)^2 / (2*h^2))
-  return(list(kpdf=data.frame(x=e,y=normVal*expVal),
+
+  # format e to array
+  eArray <- vectToArray(e)
+  # format t to array
+  if(is.vector(t) & length(t)==dim(eArray)[1]){
+    # t is a vector containing coordinates of training datapoint
+    tArray <- array(t,dim=c(length(t),1))
+  }else{
+    tArray <- t
+  }
+
+  # if vectors change to arrays
+  tArray <- vectToArray(tArray)
+
+  # sanity check
+  # check dimensionality of t and e
+  if(dim(tArray)[1] != dim(eArray)[1]){
+    stop(paste0('The dimensionalities of t and e do not match.',
+                '\nHere dim(t)[1]=',dim(tArray)[1],' and dim(e)[1]=',dim(eArray)[1]))
+  }
+  # check that t is only one point
+  if(dim(tArray)[2] != 1){
+    stop(paste0('t should represent one point.',
+                '\nHere dim(t)[2]=',dim(tArray)[2],'.'))
+  }
+
+  # dimensionality of the problem
+  n <- dim(tArray)[1]
+
+  # check dimensionality of h
+  if(length(h)!=1 && length(h)!=n ){
+    stop(paste0('The dimensionality of h and the other arguments do not match.',
+                '\nHere length(h)=',length(h),' and dim(e)[1]=',dim(eArray)[1]))
+  }
+  if(n > 1 && length(h)==1){
+    h <- rep(h,n)
+  }
+
+  # calculate multivariate sgk
+  evalPerDim <- array(0,dim=c(n,dim(eArray)[2]))
+  # evalPerDim[iDim,iEval] is the contribution of the ith dimension point iEval
+  for (iDim in 1:n){
+    evalPerDim[iDim,] <- 1 / (h[iDim] * sqrt(2*pi)) * exp(-(eArray[iDim,]-tArray[iDim,])^2 / h[iDim])
+  }
+  # evaluation is product of all dimensions
+  ans <- apply(evalPerDim,2,prod)
+
+  return(list(x_pdf=e,
+              y_pdf=ans,
               t=t,
               h=h))
 }
@@ -39,10 +85,10 @@ sgk <- function(t,e,h){
 #'@param edat a vector containing the evaluation data points.
 #'@param bwtype a string corresponding to the method for calculating bandwidths.
 #'  Either \code{'fixed'}, \code{'balloon'} or \code{'sampleSmoothing'}.
-#'@param h the bandwdth(s) of the kernels. It should be a scalar when
+#'@param h the bandwidth(s) of the kernels. It should be a scalar when
 #'  \code{'bwtype=fixed'}, a vector of length \code{length(edat)} for
-#'  \code{'bwtype='balloon'}, a vector of length \code{length(tdat)} for
-#'  \code{'bwtype='sampleSmoothing'}. It can be calculated from other functions
+#'  \code{'bwtype=balloon'}, a vector of length \code{length(tdat)} for
+#'  \code{'bwtype=sampleSmoothing'}. It can be calculated from other functions
 #'  in this package.
 #'@return The density at locations \code{edat} based on the training dataset
 #'  \code{tdat} following the method specified by \code{bwtype}. The bandwidths

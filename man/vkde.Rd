@@ -14,10 +14,10 @@ vkde(tdat, edat, bwtype, h)
 \item{bwtype}{a string corresponding to the method for calculating bandwidths.
 Either \code{'fixed'}, \code{'balloon'} or \code{'sampleSmoothing'}.}
 
-\item{h}{the bandwdth(s) of the kernels. It should be a scalar when
+\item{h}{the bandwidth(s) of the kernels. It should be a scalar when
 \code{'bwtype=fixed'}, a vector of length \code{length(edat)} for
-\code{'bwtype='balloon'}, a vector of length \code{length(tdat)} for
-\code{'bwtype='sampleSmoothing'}. It can be calculated from other functions
+\code{'bwtype=balloon'}, a vector of length \code{length(tdat)} for
+\code{'bwtype=sampleSmoothing'}. It can be calculated from other functions
 in this package.}
 }
 \value{
