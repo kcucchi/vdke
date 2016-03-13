@@ -15,8 +15,8 @@ point.}
 \item{h}{the width of the kernel.}
 }
 \value{
-The evaluation at location \code{e} of the Gaussian kernel centered
-  at \code{t} and with width \code{h}.
+The evaluation at location \code{e} of the Gaussian kernel centered at
+ \code{t} and with width \code{h}.
 }
 \description{
 \code{sgk} evaluates a kernel with a given center and bandwidth.

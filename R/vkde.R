@@ -1,26 +1,25 @@
 # Description of the package vdke
-# according to the paper of Terell and Scott, 1992
+# according to the paper of Terrell and Scott, 1992
 
-
-
-#' Single Gaussian Kernel
+#'Single Gaussian Kernel
 #'
-#' \code{sgk} evaluates a kernel with a given center and bandwidth.
+#'\code{sgk} evaluates a kernel with a given center and bandwidth.
 #'
-#' These are the details of the function.
+#'These are the details of the function.
 #'
-#' @param t a number corresponding to the training data point.
-#' @param e a number or numeric vector corresponding to the evaluation data
-#'   point.
-#' @param h the width of the kernel.
-#' @return The evaluation at location \code{e} of the Gaussian kernel centered
-#'   at \code{t} and with width \code{h}.
+#'@param t a number corresponding to the training data point.
+#'@param e a number or numeric vector corresponding to the evaluation data
+#'  point.
+#'@param h the width of the kernel.
+#'@return The evaluation at location \code{e} of the Gaussian kernel centered at
+#'  \code{t} and with width \code{h}.
 #' @examples
 #' singleKde <- sgk(0,seq(from=-5,to=5,by=0.1),1)
 #' plot(singleKde$kpdf$x,singleKde$kpdf$y,
 #'    type='l',
 #'    xlab = 'x',ylab='kernel density estimate')
 #'    axis(1,singleKde$t,labels = NA,lwd.ticks = 2,col.ticks = 'red',tck=0.1)
+#'@export
 sgk <- function(t,e,h){
   normVal <- 1 / (h * sqrt(2 * pi))
   expVal <- exp( - (e - t)^2 / (2*h^2))
@@ -30,9 +29,9 @@ sgk <- function(t,e,h){
 }
 
 
-#'title.
+#'Variable Kernel Density Estimation
 #'
-#'This is the description of the function \code{kde_h}.
+#'This is the description of the function \code{vkde}.
 #'
 #'These are the details of the function.
 #'
@@ -51,7 +50,7 @@ sgk <- function(t,e,h){
 #' @examples
 #' evalVect <- seq(from=-5,to=5,by=0.1)
 #' trainingVect <- runif(5,min = -1,max = 2)
-#' kernelVect <- kde_h(tdat=trainingVect,edat=evalVect,'fixed',1)
+#' kernelVect <- vkde(tdat=trainingVect,edat=evalVect,'fixed',1)
 #' plot(evalVect,kernelVect$kde,
 #'      type='l',
 #'      xlab = 'x',ylab='kernel density estimate')
@@ -59,9 +58,10 @@ sgk <- function(t,e,h){
 #' for(i in 1:length(trainingVect)){
 #'   lines(evalVect,kernelVect$individualKernels[i,],lty=2)
 #' }
-kde_h <- function(tdat,edat,bwtype,h){
+#'@export
+vkde <- function(tdat,edat,bwtype,h){
 
-  # sanity checks
+  # ----- sanity checks -------
   if(bwtype=='fixed'){
     print(paste0('Starting kde with fixed bandwidth (h=',h,') ...'))
 
@@ -69,7 +69,7 @@ kde_h <- function(tdat,edat,bwtype,h){
     print('Starting kde with balloon estimator...')
     # check that there are as many bandwidths as evaluation data points
     if(length(h)!=length(edat)){
-      stop(paste0('In kde_h, when bwtype="balloon", you must have length(h)==length(edat).\n',
+      stop(paste0('In vkde, when bwtype="balloon", you must have length(h)==length(edat).\n',
                   'You have length(h)=',length(h),' and length(edat)=',length(edat),'.'))
     }
 
@@ -77,48 +77,45 @@ kde_h <- function(tdat,edat,bwtype,h){
     print('Starting kde with sample smoothing estimator...')
     # check that there are as many bandwidths as training data points
     if(length(h)!=length(tdat)){
-      stop(paste0('In kde_h, when bwtype="sampleSmoothing", you must have length(h)==length(tdat).\n',
+      stop(paste0('In vkde, when bwtype="sampleSmoothing", you must have length(h)==length(tdat).\n',
                   'You have length(h)=',length(h),' and length(tdat)=',length(tdat),'.'))
     }
 
-  }else{stop('In kde_h, bwtype should be set to "fixed", "balloon" or "sampleSmoothing".')}
+  }else{stop('In vkde, bwtype should be set to "fixed", "balloon" or "sampleSmoothing".')}
+
+  # ----- start compute kernels -----
 
   n <- length(tdat) # number of individual kernels
+  individualContrib <- array(0,dim=c(n,length(edat)))
+  # vectIndividuals[iTrain,iEval] is the contribution of edat[iTrain] to the evaluation at edat[iEval]
 
-  # loop over each training data point
+  # individual contributions depend on bwtype
   if(bwtype=='fixed'){
-    individualContrib <- array(0,dim=c(n,length(edat))) # each row is an individual kernel
     for (iTrain in 1:n){
+      cat('.')
       individualContrib[iTrain,] <- sgk(tdat[iTrain],edat,h)$kpdf$y
     }
-    # the result is the average of individual kernels
-    individualKernels <- 1/n * individualContrib
-    ans <- colSums(individualKernels)
 
   }else if(bwtype=='balloon'){
-    individualContrib <- array(0,dim=c(n,length(edat)))
-    # vectIndividuals[iTrain,iEval] is the contribution of edat[iTrain] to the evaluation at edat[iEval]
     for (iEval in 1:length(edat)){ # loop over evaluation dataset
+      cat('.')
       # h_iEval <- dist_to_knn(p = edat[iEval],nbrVect = tdat, k = k) # h for the (iEval)th evaluation point
       for (iTrain in 1:n){ # loop over training dataset
         individualContrib[iTrain,iEval] <- sgk(tdat[iTrain],edat[iEval],h[iEval])$kpdf$y
       }
     }
-    # the result at location edat[iEval] is the average of individual kernels evaluations
-    individualKernels <- 1/n * individualContrib
-    ans <- colSums(individualKernels)
 
   }else if(bwtype=='sampleSmoothing'){
-    individualContrib <- array(0,dim=c(n,length(edat)))
-    # vectIndividuals[iTrain,iEval] is the contribution of edat[iTrain] to the evaluation at edat[iEval]
     # h <- bw_sampleSmoothing(tdat,k)
     for (iTrain in 1:n){ # loop over training dataset
+      cat('.')
       individualContrib[iTrain,] <- sgk(tdat[iTrain],edat,h[iTrain])$kpdf$y
     }
-    # the result is the average of individual kernels
-    individualKernels <- 1/n * individualContrib
-    ans <- colSums(individualKernels)
   }
+
+  # the result at location edat[iEval] is the average of individual kernels evaluations
+  individualKernels <- 1/n * individualContrib
+  ans <- colSums(individualKernels)
 
   return(list(kde = ans,individualKernels = individualKernels))
 

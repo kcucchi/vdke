@@ -4,18 +4,20 @@
 \alias{dist_to_knn}
 \title{Distance to kth nearest neighbor}
 \usage{
-dist_to_knn(p, nbrVect, k)
+dist_to_knn(x, nghDat, k)
 }
 \arguments{
-\item{p}{number corresponding to the reference point.}
+\item{x}{number (univariate) or vector (multivariate) corresponding to the
+reference point.}
 
-\item{nbrVect}{vector of numbers corresponding to the neighbors.}
+\item{nghDat}{vector (univariate) or array (multivariate) of numbers
+corresponding to the neighbors.}
 
 \item{k}{integer specifying the order of the neighbor.}
 }
 \value{
-The distance between \code{p} and its \code{k}th nearest neighbor
-  from vector \code{nbrVect}.
+The distance between \code{x} and its \code{k}th nearest neighbor in
+  \code{nghDat}.
 }
 \description{
 \code{dist_to_knn} calculates the distance between one point and its kth
@@ -25,6 +27,6 @@ nearest neighbor in a vector
 These are the details of the function.
 }
 \examples{
-dist_to_knn(p = 1.4, nbrVect = 0:10, k = 4)
+dist_to_knn(x = 1.4, nghDat = 0:10, k = 4)
 }
 

@@ -1,4 +1,54 @@
+#' change vector to array
+#'
+#' change vector to array
+#'
+#' change vector to array
+#'
+#' @param vect vector
+#' @return an array with dimensions (1,length(vect)
+#' @examples
+#' vectToArray(1:10)
+vectToArray <- function(vect){
+  if(is.vector(vect)){vect <- array(vect,dim = c(1,length(vect)))}
+  return(vect)
+}
 
+
+# -------- Calculate bw for rule of thumb -----------------
+
+#' Rule-of-thumb bandwidth
+#'
+#' \code{ruleOfThumb} calculates the rule-of-thumb bandwidth according to the
+#' standard formula (eg. p23 of np package documentation).
+#'
+#' These are the details of the function.
+#'
+#' @param tdat array containing the training dataset.
+#' @return a number corresponding to the standard bandwidth
+#' @examples
+#' ruleOfThumb(runif(100,0,1))
+#' @export
+ruleOfThumb <- function(tdat){
+
+  # if tdat is vector change to array with first dimension 1
+  tdat <- vectToArray(tdat)
+
+  p <- dim(tdat)[1] # space dimensionality
+  n <- dim(tdat)[2] # number of points in training dataset
+
+  spread <- numeric(length = p)
+
+  for (iDim in 1:p){
+    spread[iDim] <- min(sd(tdat[iDim,]),
+                        mean(abs(tdat[iDim,]-mean(tdat[iDim,])))/1.4826,
+                        IQR(tdat[iDim,])/1.349)
+  }
+
+  return(1.06 * spread * n^(-1/(2*p+1)))
+
+}
+
+# -------- Calculate distances to nearest neighbors ---------------------------------
 
 #' Distance to kth nearest neighbor
 #'
@@ -7,17 +57,30 @@
 #'
 #' These are the details of the function.
 #'
-#' @param p number corresponding to the reference point.
-#' @param nbrVect vector of numbers corresponding to the neighbors.
+#' @param x number (univariate) or vector (multivariate) corresponding to the
+#'   reference point.
+#' @param nghDat vector (univariate) or array (multivariate) of numbers
+#'   corresponding to the neighbors.
 #' @param k integer specifying the order of the neighbor.
-#' @return The distance between \code{p} and its \code{k}th nearest neighbor
-#'   from vector \code{nbrVect}.
+#' @return The distance between \code{x} and its \code{k}th nearest neighbor in
+#'   \code{nghDat}.
 #' @examples
-#' dist_to_knn(p = 1.4, nbrVect = 0:10, k = 4)
-dist_to_knn = function(p,nbrVect,k){
+#' dist_to_knn(x = 1.4, nghDat = 0:10, k = 4)
+#' @export
+dist_to_knn = function(x,nghDat,k){
+
+  # if nghDat is vector change it to array
+  nghDat <- vectToArray(nghDat)
+
+  # sanity check
+  if(length(x)!=(dim(nghDat)[1])){
+    stop(paste0('The length of x should be equal to the first dimension of nghDat.',
+                '\nHere length(x)=',length(x),' and dim(nghDat)[1]=',dim(nghDat)[1],'.'))
+  }
 
   # compute distances between reference point and neighbor vector
-  dist <- sqrt( (nbrVect - p)^2 )
+  diff <- sweep(nghDat,1,x) # substracts x from each column of nghDat
+  dist <- sqrt( colSums( (diff)^2 )) # sum over the dimensions
   distOrder <- sort(dist)
   # look for distance between reference point and kth nearest neighbor
   return(distOrder[k])
@@ -31,20 +94,23 @@ dist_to_knn = function(p,nbrVect,k){
 #'
 #' These are the details of the function.
 #'
-#' @param sampleVect vector containing sample datapoints.
+#' @param sampleDat vector containing sample datapoints.
 #' @param k integer specifying the order of the neighbor.
 #' @return a vector of distances, where the \code{i}th element contains the
-#'   distance between the \code{i}th element of \code{sampleVect} and its
+#'   distance between the \code{i}th element of \code{sampleDat} and its
 #'   \code{k}th neighbor.
 #' @examples
 #' sample_dist_to_knn(1:4,3)
-sample_dist_to_knn = function(sampleVect,k){
+#' @export
+sample_dist_to_knn = function(sampleDat,k){
 
-  ans <- numeric(length = length(sampleVect))
+  sampleDat <- vectToArray(sampleDat)
+
+  ans <- numeric(length = dim(sampleDat)[2])
 
   for(i in 1:length(ans)){
-    ans[i] <- dist_to_knn(p = sampleVect[i],
-                          nbrVect = sampleVect[-i],
+    ans[i] <- dist_to_knn(x = sampleDat[,i],
+                          nghDat = sampleDat[,-i],
                           k = k)
   }
 

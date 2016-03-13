@@ -4,16 +4,16 @@
 \alias{sample_dist_to_knn}
 \title{calculates vector of nearest of nearest neighbors}
 \usage{
-sample_dist_to_knn(sampleVect, k)
+sample_dist_to_knn(sampleDat, k)
 }
 \arguments{
-\item{sampleVect}{vector containing sample datapoints.}
+\item{sampleDat}{vector containing sample datapoints.}
 
 \item{k}{integer specifying the order of the neighbor.}
 }
 \value{
 a vector of distances, where the \code{i}th element contains the
-  distance between the \code{i}th element of \code{sampleVect} and its
+  distance between the \code{i}th element of \code{sampleDat} and its
   \code{k}th neighbor.
 }
 \description{
