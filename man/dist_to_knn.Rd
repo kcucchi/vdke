@@ -28,5 +28,6 @@ These are the details of the function.
 }
 \examples{
 dist_to_knn(x = 1.4, nghDat = 0:10, k = 4)
+dist_to_knn(x=c(1,2),nghDat=array(1:10,dim=c(2,5)),k=1)
 }
 

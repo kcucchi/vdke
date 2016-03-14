@@ -10,7 +10,8 @@
 #'@param t a number or vector corresponding to the training data point.
 #'@param e a vector, or array corresponding to the evaluation data points.
 #'@param h the width of the kernel.
-#'@return The evaluation at location \code{e} of the Gaussian kernel centered at
+#'@param p the dimensionality of the space. Default is univariate (p=1).
+#'@return y_pdf The evaluation at location \code{e} of the Gaussian kernel centered at
 #'  \code{t} and with width \code{h}.
 #'@examples
 #'singleKde1D <- sgk(0,seq(from=-5,to=5,by=0.1),1)
@@ -20,14 +21,16 @@
 #'    axis(1,singleKde$t,labels = NA,lwd.ticks = 2,col.ticks = 'red',tck=0.1)
 #'singleKde2D <- sgk(t=c(0,1),e=array(1:10,dim=c(2,5)),h=1)
 #'@export
-sgk <- function(t,e,h){
+sgk <- function(t,e,h,p=1){
 
   # format e to array
-  eArray <- vectToArray(e)
+  if(is.vector(e)){
+    eArray <- array(e,dim=c(p,length(e)/p))
+  }else{eArray <- e}
   # format t to array
-  if(is.vector(t) & length(t)==dim(eArray)[1]){
+  if(is.vector(t) & length(t)==p){
     # t is a vector containing coordinates of training datapoint
-    tArray <- array(t,dim=c(length(t),1))
+    tArray <- array(t,dim=c(p,1))
   }else{
     tArray <- t
   }
@@ -37,9 +40,11 @@ sgk <- function(t,e,h){
 
   # sanity check
   # check dimensionality of t and e
-  if(dim(tArray)[1] != dim(eArray)[1]){
-    stop(paste0('The dimensionalities of t and e do not match.',
-                '\nHere dim(t)[1]=',dim(tArray)[1],' and dim(e)[1]=',dim(eArray)[1]))
+  if(dim(tArray)[1] != p || dim(eArray)[1] != p){
+    stop(paste0('Dimension problem in sgk.',
+                '\nHere dim(tArray)[1]=',dim(tArray)[1],
+                ', dim(eArray)[1]=',dim(eArray)[1],
+                ' and p=',p,'.'))
   }
   # check that t is only one point
   if(dim(tArray)[2] != 1){
@@ -47,22 +52,19 @@ sgk <- function(t,e,h){
                 '\nHere dim(t)[2]=',dim(tArray)[2],'.'))
   }
 
-  # dimensionality of the problem
-  n <- dim(tArray)[1]
-
   # check dimensionality of h
-  if(length(h)!=1 && length(h)!=n ){
+  if(length(h)!=1 && length(h)!=p ){
     stop(paste0('The dimensionality of h and the other arguments do not match.',
-                '\nHere length(h)=',length(h),' and dim(e)[1]=',dim(eArray)[1]))
+                '\nHere length(h)=',length(h),' and p=',p,'.'))
   }
-  if(n > 1 && length(h)==1){
-    h <- rep(h,n)
+  if(p > 1 && length(h)==1){
+    h <- rep(h,p)
   }
 
   # calculate multivariate sgk
-  evalPerDim <- array(0,dim=c(n,dim(eArray)[2]))
+  evalPerDim <- array(0,dim=c(p,dim(eArray)[2]))
   # evalPerDim[iDim,iEval] is the contribution of the ith dimension point iEval
-  for (iDim in 1:n){
+  for (iDim in 1:p){
     evalPerDim[iDim,] <- 1 / (h[iDim] * sqrt(2*pi)) * exp(-(eArray[iDim,]-tArray[iDim,])^2 / h[iDim])
   }
   # evaluation is product of all dimensions
@@ -107,55 +109,144 @@ sgk <- function(t,e,h){
 #'@export
 vkde <- function(tdat,edat,bwtype,h){
 
+  # ----- modify argument types -------
+  # if tdat array and edat vector change edat to array
+  if(is.array(tdat) && is.vector(edat)){
+    eArray <- array(edat,dim=c(length(edat),1))
+  }else{ # if tdat and edat are vectors change to arrays
+    eArray <- vectToArray(edat)
+  }
+  tArray <- vectToArray(tdat)
+
+  n <- dim(tArray)[2] # number of individual kernels
+  m <- dim(eArray)[2] # number of evaluation datapoints
+
   # ----- sanity checks -------
+  # check compatibility of tdat and edat first dimensions
+  if(dim(eArray)[1]!=dim(tArray)[1]){
+    stop(paste0('In vkde, dimensions of edat and tdat do not match.\n',
+                'Here dim(eArray)[1]=',dim(eArray)[1],
+                ' and dim(tArray)[1]=',dim(tArray)[1],'.'))
+  }
+
+  p <- dim(eArray)[1] # dimension of space
+
+  # check compatibility if h dimensions
   if(bwtype=='fixed'){
-    print(paste0('Starting kde with fixed bandwidth (h=',h,') ...'))
+    if(is.vector(h)){
+      if(length(h)!=1 && length(h)!=p){
+        stop(paste0('In vkde, when bwtype=',bwtype,
+                    ' h should be a number or a vector of size p.\n',
+                    'Here length(h)=',length(h),
+                    ' and p=',p,'.'))
+      }
+      hArray <- array(h,dim = c(p,1))
+    }else if(is.array(h)){
+      if(dim(h)[2]!=1){
+        stop(paste0('h should refer to one bandwidth only.\n',
+                    'Here dim(h)[2]=',dim(h)[2],'.'))
+      }
+      if(dim(h)[1]==1){
+        hArray <- array(rep(h,p),dim=c(p,1))
+      }else if(dim(h)[1]==p){
+        hArray <- h
+      }else{
+        stop(paste0('h should have dimension 1 or p.\n',
+                    'Here dim(h)[1]=',dim(h)[1],' and p=',p,'.'))
+      }
+    }else{stop(' h should be an array or a vector.')}
 
   }else if(bwtype=='balloon'){
-    print('Starting kde with balloon estimator...')
+
     # check that there are as many bandwidths as evaluation data points
-    if(length(h)!=length(edat)){
-      stop(paste0('In vkde, when bwtype="balloon", you must have length(h)==length(edat).\n',
-                  'You have length(h)=',length(h),' and length(edat)=',length(edat),'.'))
-    }
+    if(is.vector(h)){
+      if(length(h)==m){ # one bw per evaluation point
+        hArray <- array(rep(h,p,each=p),dim=c(p,m))
+      }else{
+        stop(paste0('In vkde, when bwtype=',bwtype,
+                    ' h should have the same size as the number of evaluation data points.\n',
+                    'You have length(h)=',length(h),' and m=',m,'.'))
+      }
+
+    }else if(is.array(h)){
+      if(dim(h)[2]!=m){
+        stop(paste0('In vkde, when bwtype=',bwtype,
+                    ' h should have the same size as the number of evaluation data points.\n',
+                    'You have dim(h)[2]=',dim(h)[2],' and m=',m,'.'))
+      }
+      if(dim(h)[1]==1){ # repeat the bandwidths over all directions
+        hArray <- array(rep(hArray,p,each=p),dim=c(p,m))
+      }else if(dim(h)[1]==p){
+        hArray <- h
+      }else{
+        stop(paste0('In vkde, dimension error\n',
+                    'dim(h)[1]=',dim(h)[1],' and p=',p,'.'))
+      }
+
+    }else{stop('h should be an array or a vector.')}
 
   }else if(bwtype=='sampleSmoothing'){
-    print('Starting kde with sample smoothing estimator...')
-    # check that there are as many bandwidths as training data points
-    if(length(h)!=length(tdat)){
-      stop(paste0('In vkde, when bwtype="sampleSmoothing", you must have length(h)==length(tdat).\n',
-                  'You have length(h)=',length(h),' and length(tdat)=',length(tdat),'.'))
-    }
+
+    # check that there are as many bandwidths as evaluation data points
+    if(is.vector(h)){
+      if(length(h)==n){ # one bw per training datapoint
+        hArray <- array(rep(h,p,each=p),dim=c(p,n))
+      }else{
+        stop(paste0('In vkde, when bwtype=',bwtype,
+                    ' h should have the same size as the number of training data points.\n',
+                    'You have length(h)=',length(h),' and n=',n,'.'))
+      }
+    }else if(is.array(h)){
+      if(dim(h)[2]!=n){
+        stop(paste0('In vkde, when bwtype=',bwtype,
+                    ' h should have the same size as the number of training data points.\n',
+                    'You have dim(h)[2]=',dim(h)[2],' and n=',n,'.'))
+      }
+      if(dim(h)[1]==1){
+        hArray <- array(rep(hArray,p,each=p),dim=c(p,n))
+      }else if(dim(h)[1]==p){
+        hArray <- h
+      }else{
+        stop(paste0('In vkde, dimension error\n',
+                    'dim(h)[1]=',dim(h)[1],' and p=',p,'.'))
+      }
+    }else{stop('h should be an array or a vector.')}
 
   }else{stop('In vkde, bwtype should be set to "fixed", "balloon" or "sampleSmoothing".')}
 
   # ----- start compute kernels -----
 
-  n <- length(tdat) # number of individual kernels
-  individualContrib <- array(0,dim=c(n,length(edat)))
-  # vectIndividuals[iTrain,iEval] is the contribution of edat[iTrain] to the evaluation at edat[iEval]
+  individualContrib <- array(0,dim=c(n,m))
+  # vectIndividuals[iTrain,iEval] is the contribution of tdat[iTrain] to the evaluation at edat[iEval]
 
   # individual contributions depend on bwtype
   if(bwtype=='fixed'){
+    print(paste0('Starting kde with fixed bandwidth.'))
     for (iTrain in 1:n){
       cat('.')
-      individualContrib[iTrain,] <- sgk(tdat[iTrain],edat,h)$kpdf$y
+      # contribution of (iTrain)th training point at evaluation locations
+      individualContrib[iTrain,] <-
+        sgk(tArray[,iTrain],eArray,hArray,p=p)$y_pdf
     }
 
   }else if(bwtype=='balloon'){
-    for (iEval in 1:length(edat)){ # loop over evaluation dataset
+    print('Starting kde with balloon estimator')
+    for (iEval in 1:m){ # loop over evaluation dataset
       cat('.')
-      # h_iEval <- dist_to_knn(p = edat[iEval],nbrVect = tdat, k = k) # h for the (iEval)th evaluation point
       for (iTrain in 1:n){ # loop over training dataset
-        individualContrib[iTrain,iEval] <- sgk(tdat[iTrain],edat[iEval],h[iEval])$kpdf$y
+        # contribution of (iTrain)th training point at (iEval)th evaluation location
+        individualContrib[iTrain,iEval] <-
+          sgk(tArray[,iTrain],eArray[,iEval],hArray[,iEval],p=p)$y_pdf
       }
     }
 
   }else if(bwtype=='sampleSmoothing'){
-    # h <- bw_sampleSmoothing(tdat,k)
+    print('Starting kde with sample smoothing estimator...')
     for (iTrain in 1:n){ # loop over training dataset
       cat('.')
-      individualContrib[iTrain,] <- sgk(tdat[iTrain],edat,h[iTrain])$kpdf$y
+      # contribution of (iTrain)th training point at evaluation locations
+      individualContrib[iTrain,] <-
+        sgk(tArray[,iTrain],eArray,hArray[,iTrain],p=p)$y_pdf
     }
   }
 
@@ -163,7 +254,11 @@ vkde <- function(tdat,edat,bwtype,h){
   individualKernels <- 1/n * individualContrib
   ans <- colSums(individualKernels)
 
-  return(list(kde = ans,individualKernels = individualKernels))
+  return(list(kde = ans,
+              individualKernels = individualKernels,
+              n=n,
+              m=m,
+              p=p))
 
 }
 

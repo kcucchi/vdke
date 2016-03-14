@@ -24,6 +24,7 @@ sample.
 These are the details of the function.
 }
 \examples{
-sample_dist_to_knn(1:4,3)
+sample_dist_to_knn(sampleDat = 1:4,k = 3)
+sample_dist_to_knn(sampleDat = array(1:12,dim = c(3,4)),k = 1)
 }
 

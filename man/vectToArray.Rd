@@ -10,13 +10,14 @@ vectToArray(vect)
 \item{vect}{vector}
 }
 \value{
-an array with dimensions (1,length(vect)
+an array with dimensions (1,length(vect))
 }
 \description{
 change vector to array
 }
 \details{
-change vector to array
+Transforms a dataset in the form of a vector in a dataset in the form of an
+array
 }
 \examples{
 vectToArray(1:10)

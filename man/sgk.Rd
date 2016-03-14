@@ -4,18 +4,19 @@
 \alias{sgk}
 \title{Single Gaussian Kernel}
 \usage{
-sgk(t, e, h)
+sgk(t, e, h, p = 1)
 }
 \arguments{
 \item{t}{a number or vector corresponding to the training data point.}
 
-\item{e}{a vector, or array corresponding to the evaluation data
-points.}
+\item{e}{a vector, or array corresponding to the evaluation data points.}
 
 \item{h}{the width of the kernel.}
+
+\item{p}{the dimensionality of the space. Default is univariate (p=1).}
 }
 \value{
-The evaluation at location \code{e} of the Gaussian kernel centered at
+y_pdf The evaluation at location \code{e} of the Gaussian kernel centered at
  \code{t} and with width \code{h}.
 }
 \description{
@@ -25,10 +26,11 @@ The evaluation at location \code{e} of the Gaussian kernel centered at
 These are the details of the function.
 }
 \examples{
-singleKde <- sgk(0,seq(from=-5,to=5,by=0.1),1)
-plot(singleKde$kpdf$x,singleKde$kpdf$y,
+singleKde1D <- sgk(0,seq(from=-5,to=5,by=0.1),1)
+plot(singleKde1D$x_pdf,singleKde1D$y_pdf,
    type='l',
    xlab = 'x',ylab='kernel density estimate')
    axis(1,singleKde$t,labels = NA,lwd.ticks = 2,col.ticks = 'red',tck=0.1)
+singleKde2D <- sgk(t=c(0,1),e=array(1:10,dim=c(2,5)),h=1)
 }
 

@@ -7,9 +7,9 @@
 bw_balloon_LQ(tdat, edat, k)
 }
 \arguments{
-\item{tdat}{vector containing the training dataset.}
+\item{tdat}{vector or array containing the training dataset.}
 
-\item{edat}{vector containing the evaluation data points.}
+\item{edat}{vector or array containing the evaluation data points.}
 
 \item{k}{integer specifying the order of the neighbor.}
 }
@@ -25,7 +25,10 @@ estimation.
 These are the details of the function.
 }
 \examples{
+# univariate
 bw_balloon_LQ(tdat = 1:10,edat = 5.1,k = 3)
 bw_balloon_LQ(tdat = 1:10,edat = c(2.8,5.1),k = 3)
+# multivariate
+bw_balloon_LQ(tdat = array(1:20,dim=c(4,5)),edat = 1:4,k = 1)
 }
 

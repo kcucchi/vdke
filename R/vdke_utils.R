@@ -2,10 +2,11 @@
 #'
 #' change vector to array
 #'
-#' change vector to array
+#' Transforms a dataset in the form of a vector in a dataset in the form of an
+#' array
 #'
 #' @param vect vector
-#' @return an array with dimensions (1,length(vect)
+#' @return an array with dimensions (1,length(vect))
 #' @examples
 #' vectToArray(1:10)
 vectToArray <- function(vect){
@@ -66,6 +67,7 @@ ruleOfThumb <- function(tdat){
 #'   \code{nghDat}.
 #' @examples
 #' dist_to_knn(x = 1.4, nghDat = 0:10, k = 4)
+#' dist_to_knn(x=c(1,2),nghDat=array(1:10,dim=c(2,5)),k=1)
 #' @export
 dist_to_knn = function(x,nghDat,k){
 
@@ -81,6 +83,7 @@ dist_to_knn = function(x,nghDat,k){
   # compute distances between reference point and neighbor vector
   diff <- sweep(nghDat,1,x) # substracts x from each column of nghDat
   dist <- sqrt( colSums( (diff)^2 )) # sum over the dimensions
+  # sort distances in increasing order
   distOrder <- sort(dist)
   # look for distance between reference point and kth nearest neighbor
   return(distOrder[k])
@@ -100,11 +103,18 @@ dist_to_knn = function(x,nghDat,k){
 #'   distance between the \code{i}th element of \code{sampleDat} and its
 #'   \code{k}th neighbor.
 #' @examples
-#' sample_dist_to_knn(1:4,3)
+#' sample_dist_to_knn(sampleDat = 1:4,k = 3)
+#' sample_dist_to_knn(sampleDat = array(1:12,dim = c(3,4)),k = 1)
 #' @export
-sample_dist_to_knn = function(sampleDat,k){
+sample_dist_to_knn <- function(sampleDat,k){
 
   sampleDat <- vectToArray(sampleDat)
+
+  # check that k is less than number of points in sample dataset
+  if(k > dim(sampleDat)[2]){
+    stop(paste0('k should be lower than the number of sample datapoints.',
+                '\nHere k=',k,' and dim(sampleDat)[2]=',dim(sampleDat)[2],'.'))
+  }
 
   ans <- numeric(length = dim(sampleDat)[2])
 
