@@ -4,7 +4,7 @@
 \alias{vkde}
 \title{Variable Kernel Density Estimation}
 \usage{
-vkde(tdat, edat, bwtype, h)
+vkde(tdat, edat, bwtype, h, p = 1, verbose = F)
 }
 \arguments{
 \item{tdat}{a vector containing the training dataset.}

@@ -65,7 +65,8 @@ sgk <- function(t,e,h,p=1){
   evalPerDim <- array(0,dim=c(p,dim(eArray)[2]))
   # evalPerDim[iDim,iEval] is the contribution of the ith dimension point iEval
   for (iDim in 1:p){
-    evalPerDim[iDim,] <- 1 / (h[iDim] * sqrt(2*pi)) * exp(-(eArray[iDim,]-tArray[iDim,])^2 / h[iDim])
+    evalPerDim[iDim,] <- 1 / (h[iDim] * sqrt(2*pi)) *
+      exp(-(eArray[iDim,]-tArray[iDim,])^2 / (2 * h[iDim]^2))
   }
   # evaluation is product of all dimensions
   ans <- apply(evalPerDim,2,prod)
@@ -107,11 +108,11 @@ sgk <- function(t,e,h,p=1){
 #'   lines(evalVect,kernelVect$individualKernels[i,],lty=2)
 #' }
 #'@export
-vkde <- function(tdat,edat,bwtype,h){
+vkde <- function(tdat,edat,bwtype,h,p=1,verbose=F){
 
   # ----- modify argument types -------
   # if tdat array and edat vector change edat to array
-  if(is.array(tdat) && is.vector(edat)){
+  if(is.array(tdat) && length(edat)==p){
     eArray <- array(edat,dim=c(length(edat),1))
   }else{ # if tdat and edat are vectors change to arrays
     eArray <- vectToArray(edat)
@@ -129,7 +130,7 @@ vkde <- function(tdat,edat,bwtype,h){
                 ' and dim(tArray)[1]=',dim(tArray)[1],'.'))
   }
 
-  p <- dim(eArray)[1] # dimension of space
+  # p <- dim(eArray)[1] # dimension of space
 
   # check compatibility if h dimensions
   if(bwtype=='fixed'){
@@ -221,7 +222,7 @@ vkde <- function(tdat,edat,bwtype,h){
 
   # individual contributions depend on bwtype
   if(bwtype=='fixed'){
-    print(paste0('Starting kde with fixed bandwidth.'))
+    if(verbose) print(paste0('Starting kde with fixed bandwidth.'))
     for (iTrain in 1:n){
       cat('.')
       # contribution of (iTrain)th training point at evaluation locations
@@ -230,7 +231,7 @@ vkde <- function(tdat,edat,bwtype,h){
     }
 
   }else if(bwtype=='balloon'){
-    print('Starting kde with balloon estimator')
+    if(verbose) print('Starting kde with balloon estimator')
     for (iEval in 1:m){ # loop over evaluation dataset
       cat('.')
       for (iTrain in 1:n){ # loop over training dataset
@@ -241,7 +242,7 @@ vkde <- function(tdat,edat,bwtype,h){
     }
 
   }else if(bwtype=='sampleSmoothing'){
-    print('Starting kde with sample smoothing estimator...')
+    if (verbose) print('Starting kde with sample smoothing estimator...')
     for (iTrain in 1:n){ # loop over training dataset
       cat('.')
       # contribution of (iTrain)th training point at evaluation locations
@@ -254,7 +255,8 @@ vkde <- function(tdat,edat,bwtype,h){
   individualKernels <- 1/n * individualContrib
   ans <- colSums(individualKernels)
 
-  return(list(kde = ans,
+  return(list(x_pdf=edat,
+              y_pdf=ans,
               individualKernels = individualKernels,
               n=n,
               m=m,

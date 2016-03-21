@@ -9,6 +9,7 @@
 #' @return an array with dimensions (1,length(vect))
 #' @examples
 #' vectToArray(1:10)
+#' @export
 vectToArray <- function(vect){
   if(is.vector(vect)){vect <- array(vect,dim = c(1,length(vect)))}
   return(vect)
