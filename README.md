@@ -1,3 +1,5 @@
+WORK IN PROGRESS
+
 # vdke
 
 package for variable density kernel estimation
