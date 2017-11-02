@@ -13,6 +13,6 @@ To install the package, use these two lines of codes.
 
 ```{r}
 install.packages("devtools")
-devtools::install_github("kcucchi/vdke")
+devtools::install_github("kcucchi/vkde")
 ```
 
