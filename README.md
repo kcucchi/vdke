@@ -15,4 +15,4 @@ To install the package, use these two lines of codes.
 install.packages("devtools")
 devtools::install_github("kcucchi/vdke")
 ```
-Note: careful there is a mistake in the name of the repository...
+
